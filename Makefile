@@ -1,20 +1,21 @@
-
 CC = gcc
 CFLAGS = -Wall -g
 
-all: bin/ls-v1.0.0 bin/ls-v1.1.0 bin/ls-v1.2.0
+# Directories
+SRC_DIR = src
+BIN_DIR = bin
 
-# Compile v1.0.0
-bin/ls-v1.0.0: src/ls-v1.0.0.c
-	$(CC) $(CFLAGS) $< -o $@
+# Files
+SRC_V1_2 = $(SRC_DIR)/ls-v1.2.0.c
+BIN_V1_2 = $(BIN_DIR)/ls-v1.2.0
 
-# Compile v1.1.0
-bin/ls-v1.1.0: src/ls-v1.1.0.c
-	$(CC) $(CFLAGS) $< -o $@
+all: $(BIN_V1_2)
 
-# Compile v1.2.0 (Column Display)
-bin/ls-v1.2.0: src/ls-v1.2.0.c
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+$(BIN_V1_2): $(SRC_V1_2) | $(BIN_DIR)
+	$(CC) $(CFLAGS) $(SRC_V1_2) -o $(BIN_V1_2)
 
 clean:
-	rm -f bin/*
+	rm -rf $(BIN_DIR)/*
