@@ -1,30 +1,32 @@
-# REPORT.md
+cat > REPORT.md << EOF
+### Feature 3: Column Display (Down Then Across)
 
-## Feature 2: ls-v1.1.0 – Complete Long Listing Format
+**Q1. Explain the general logic for printing items in a "down then across" columnar format. Why is a simple single loop through the list of filenames insufficient for this task?**  
 
-### Q1: Crucial difference between stat() and lstat()
-- stat(): Returns info about a file, follows symbolic links (shows target file info)
-- lstat(): Returns info about a file, does NOT follow symbolic links (shows link itself)
-- For ls -l, lstat() is preferred to show symlinks correctly
+- General Logic:  
+  1. Pehle **sab filenames ek dynamically allocated array me store** karte hain.  
+  2. Maximum filename length nikalte hain aur spacing add karte hain.  
+  3. Terminal width ko use karke **number of columns** aur **rows** calculate karte hain:  
+     columns = terminal_width / (max_filename_length + spacing)  
+     rows = ceil(total_files / columns)  
+  4. Print karte waqt **row-wise iteration** karte hain:  
+     - First row: filenames[0], filenames[0 + rows], filenames[0 + 2*rows] …  
+     - Second row: filenames[1], filenames[1 + rows], filenames[1 + 2*rows] …  
+  - Is tarah se items "down then across" print hote hain.  
 
-### Q2: Extracting file type and permissions from st_mode
-- st_mode contains file type and permission bits
+- Reason single loop is insufficient:  
+  - Simple loop se files sirf **row-wise ya column-wise sequentially** print hongi.  
+  - Columns align nahi honge, aur output ls ke default style jaisa nahi hoga.  
 
-// File type
-if (S_ISDIR(st_mode))   // directory
-if (S_ISREG(st_mode))   // regular file
-if (S_ISLNK(st_mode))   // symbolic link
+**Q2. What is the purpose of the ioctl system call in this context? What would be the limitations of your program if you only used a fixed-width fallback (e.g., 80 columns) instead of detecting the terminal size?**  
 
-// Permissions (bitwise AND)
-st_mode & S_IRUSR ? 'r' : '-';  // owner read
-st_mode & S_IWUSR ? 'w' : '-';  // owner write
-st_mode & S_IXUSR ? 'x' : '-';  // owner execute
-st_mode & S_IRGRP ? 'r' : '-';  // group read
-st_mode & S_IWGRP ? 'w' : '-';  // group write
-st_mode & S_IXGRP ? 'x' : '-';  // group execute
-st_mode & S_IROTH ? 'r' : '-';  // others read
-st_mode & S_IWOTH ? 'w' : '-';  // others write
-st_mode & S_IXOTH ? 'x' : '-';  // others execute
+- Purpose of ioctl:
+  - `ioctl` aur `TIOCGWINSZ` ka use **current terminal width** detect karne ke liye hota hai.  
+  - Isse program automatically **columns adjust** karta hai according to terminal size.  
 
-- Combine bits to create "drwxr-xr-x" style long listing
+- Limitation of fixed-width fallback (80 columns):  
+  - Agar terminal chhota hai → output overflow ho sakta hai aur columns align nahi honge.  
+  - Agar terminal bada hai → unnecessary empty space hogi.  
+  - User experience poor ho jayega; ls ka default behavior accurately mimic nahi hoga.  
 
+EOF
