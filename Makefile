@@ -1,3 +1,12 @@
+SRC = src/ls-v1.3.0.c
+BIN = bin/ls-v1.3.0
+
+all:
+	mkdir -p bin
+	gcc $(SRC) -o $(BIN)
+
+clean:
+	rm -f $(BIN)
 CC = gcc
 CFLAGS = -Wall -g
 
