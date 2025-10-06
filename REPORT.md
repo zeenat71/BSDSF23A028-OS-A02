@@ -1,32 +1,57 @@
-cat > REPORT.md << EOF
-### Feature 3: Column Display (Down Then Across)
+# REPORT.md
 
-**Q1. Explain the general logic for printing items in a "down then across" columnar format. Why is a simple single loop through the list of filenames insufficient for this task?**  
+## Feature 4: ls-v1.3.0 – Horizontal Column Display (-x Option)
 
-- General Logic:  
-  1. Pehle **sab filenames ek dynamically allocated array me store** karte hain.  
-  2. Maximum filename length nikalte hain aur spacing add karte hain.  
-  3. Terminal width ko use karke **number of columns** aur **rows** calculate karte hain:  
-     columns = terminal_width / (max_filename_length + spacing)  
-     rows = ceil(total_files / columns)  
-  4. Print karte waqt **row-wise iteration** karte hain:  
-     - First row: filenames[0], filenames[0 + rows], filenames[0 + 2*rows] …  
-     - Second row: filenames[1], filenames[1 + rows], filenames[1 + 2*rows] …  
-  - Is tarah se items "down then across" print hote hain.  
+### 1. Implementation Complexity: "Down Then Across" vs "Across" Printing Logic
 
-- Reason single loop is insufficient:  
-  - Simple loop se files sirf **row-wise ya column-wise sequentially** print hongi.  
-  - Columns align nahi honge, aur output ls ke default style jaisa nahi hoga.  
+**Down Then Across (Vertical) Printing Logic:**
+- Isme files ko **row by row** print karte hain, matlab pehle har column ka first item, phir second row, etc.
+- **Pre-calculation required:**
+  - Total number of files
+  - Maximum filename length
+  - Number of rows aur columns
+- Reason: Row-major printing nahi hoti, isliye pehle rows aur columns calculate karna zaroori hai taake alignment aur spacing sahi ho.
+- Complexity: **High** – multiple iterations aur alignment logic chahiye.
 
-**Q2. What is the purpose of the ioctl system call in this context? What would be the limitations of your program if you only used a fixed-width fallback (e.g., 80 columns) instead of detecting the terminal size?**  
+**Across (Horizontal) Printing Logic:**
+- Isme files ko **left to right** print karte hain aur line wrap tab hota hai jab terminal width cross ho.
+- **Pre-calculation required:**
+  - Maximum filename length (for column spacing)
+  - Current cursor position (horizontal tracking)
+- Reason: Simple row-major iteration, space padding aur newline management ke alawa zyada calculation nahi chahiye.
+- Complexity: **Lower** – mostly sequential iteration aur line wrapping.
 
-- Purpose of ioctl:
-  - `ioctl` aur `TIOCGWINSZ` ka use **current terminal width** detect karne ke liye hota hai.  
-  - Isse program automatically **columns adjust** karta hai according to terminal size.  
+**Conclusion:**  
+"Down then across" vertical printing requires more pre-calculation and planning, whereas horizontal "across" printing is simpler and more straightforward.
 
-- Limitation of fixed-width fallback (80 columns):  
-  - Agar terminal chhota hai → output overflow ho sakta hai aur columns align nahi honge.  
-  - Agar terminal bada hai → unnecessary empty space hogi.  
-  - User experience poor ho jayega; ls ka default behavior accurately mimic nahi hoga.  
+---
 
-EOF
+### 2. Strategy to Manage Different Display Modes
+
+- **Display Modes Implemented:**
+  - Default vertical (down then across)
+  - Long-listing (-l)
+  - Horizontal (-x)
+
+- **How program decides which function to call:**
+  1. **Command-line arguments parsed using `getopt()`**.
+  2. A **display_mode flag** (integer or enum) is set based on the options:
+     - `0` – default vertical
+     - `1` – long-listing (-l)
+     - `2` – horizontal (-x)
+  3. After reading all filenames into an array, **conditional checks** call the appropriate function:
+     - If `display_mode == 1` → call `do_ls_long()`
+     - Else if `display_mode == 2` → call `do_ls_horizontal()`
+     - Else → call `do_ls_vertical()`
+- **Benefit:** Centralized control allows easy addition of future display modes without modifying main logic heavily.
+
+---
+
+### 3. Additional Notes
+
+- Terminal width detected using `ioctl(TIOCGWINSZ)` for dynamic column calculation.
+- Maximum filename length is used to determine spacing between columns.
+- Horizontal mode ensures clean wrapping without breaking words or misalignment.
+- Default vertical mode preserves compatibility with previous versions.
+
+---
