@@ -17,27 +17,27 @@
 
 int display_mode = 0; // 0 = down-across, 1 = horizontal
 
-// Comparison function for qsort
+// Safe comparison function for qsort
 int cmpfunc(const void *a, const void *b) {
-    char *str1 = *(char **)a;
-    char *str2 = *(char **)b;
-    return strcmp(str1, str2);
+    const char *fa = *(const char **)a;
+    const char *fb = *(const char **)b;
+    return strcmp(fa, fb);
 }
 
-// Function to get terminal width
+// Get terminal width
 int get_terminal_width() {
     struct winsize w;
-    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
-        return 80; // fallback width
-    }
+    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
+        return 80; // fallback
     return w.ws_col;
 }
 
-// Print filenames in vertical (down then across) columns
+// Vertical display: down then across
 void print_down_across(char **files, int n) {
     int maxlen = 0;
     for(int i=0;i<n;i++)
         if((int)strlen(files[i]) > maxlen) maxlen = strlen(files[i]);
+
     int term_width = get_terminal_width();
     int cols = term_width / (maxlen + SPACING);
     if(cols < 1) cols = 1;
@@ -53,11 +53,12 @@ void print_down_across(char **files, int n) {
     }
 }
 
-// Print filenames in horizontal (row-major) columns
+// Horizontal display: row-major
 void print_horizontal(char **files, int n) {
     int maxlen = 0;
     for(int i=0;i<n;i++)
         if((int)strlen(files[i]) > maxlen) maxlen = strlen(files[i]);
+
     int term_width = get_terminal_width();
     int col_width = maxlen + SPACING;
     int cur_width = 0;
@@ -73,7 +74,7 @@ void print_horizontal(char **files, int n) {
     printf("\n");
 }
 
-// Read directory entries into array, sort, and print
+// Read, sort, and print directory
 void do_ls(const char *dir) {
     DIR *dp = opendir(dir);
     if(!dp){
@@ -82,8 +83,7 @@ void do_ls(const char *dir) {
     }
 
     struct dirent *entry;
-    int capacity = 100;
-    int count = 0;
+    int capacity = 100, count = 0;
     char **files = malloc(sizeof(char*)*capacity);
 
     while((entry = readdir(dp)) != NULL){
@@ -92,21 +92,20 @@ void do_ls(const char *dir) {
             capacity *= 2;
             files = realloc(files, sizeof(char*)*capacity);
         }
-        files[count] = strdup(entry->d_name);
-        count++;
+        files[count++] = strdup(entry->d_name);
     }
-
     closedir(dp);
 
     // Alphabetical sort
     qsort(files, count, sizeof(char*), cmpfunc);
 
-    // Print according to mode
+    // Display
     if(display_mode == 0)
         print_down_across(files, count);
     else
         print_horizontal(files, count);
 
+    // Free memory
     for(int i=0;i<count;i++) free(files[i]);
     free(files);
 }
@@ -114,12 +113,10 @@ void do_ls(const char *dir) {
 int main(int argc, char *argv[]){
     int opt;
     while((opt = getopt(argc, argv, "x")) != -1){
-        switch(opt){
-            case 'x': display_mode = 1; break;
-        }
+        if(opt == 'x') display_mode = 1;
     }
 
-    if(optind == argc){ // no directory specified
+    if(optind == argc){ // no directory
         do_ls(".");
     } else {
         for(int i=optind;i<argc;i++){

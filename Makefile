@@ -1,30 +1,39 @@
-SRC = src/ls-v1.3.0.c
-BIN = bin/ls-v1.3.0
+# Makefile for all ls versions
 
-all:
-	mkdir -p bin
-	gcc $(SRC) -o $(BIN)
-
-clean:
-	rm -f $(BIN)
-CC = gcc
-CFLAGS = -Wall -g
-
-# Directories
 SRC_DIR = src
 BIN_DIR = bin
 
-# Files
-SRC_V1_2 = $(SRC_DIR)/ls-v1.2.0.c
-BIN_V1_2 = $(BIN_DIR)/ls-v1.2.0
+SRC = $(SRC_DIR)/ls-v1.0.0.c \
+      $(SRC_DIR)/ls-v1.2.0.c \
+      $(SRC_DIR)/ls-v1.3.0.c \
+      $(SRC_DIR)/ls-v1.4.0.c
 
-all: $(BIN_V1_2)
+BIN = $(BIN_DIR)/ls-v1.0.0 \
+      $(BIN_DIR)/ls-v1.2.0 \
+      $(BIN_DIR)/ls-v1.3.0 \
+      $(BIN_DIR)/ls-v1.4.0
 
+# Default target
+all: $(BIN_DIR) $(BIN)
+
+# Create bin folder if not exist
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-$(BIN_V1_2): $(SRC_V1_2) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $(SRC_V1_2) -o $(BIN_V1_2)
+# Compile each source to its binary
+$(BIN_DIR)/ls-v1.0.0: $(SRC_DIR)/ls-v1.0.0.c | $(BIN_DIR)
+	gcc $< -o $@
 
+$(BIN_DIR)/ls-v1.2.0: $(SRC_DIR)/ls-v1.2.0.c | $(BIN_DIR)
+	gcc $< -o $@
+
+$(BIN_DIR)/ls-v1.3.0: $(SRC_DIR)/ls-v1.3.0.c | $(BIN_DIR)
+	gcc $< -o $@
+
+$(BIN_DIR)/ls-v1.4.0: $(SRC_DIR)/ls-v1.4.0.c | $(BIN_DIR)
+	gcc $< -o $@
+
+# Clean binaries
 clean:
 	rm -rf $(BIN_DIR)/*
+
