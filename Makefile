@@ -1,21 +1,39 @@
-# Compiler
+# Makefile for LS Project - Feature 2
+
+# Compiler and flags
 CC = gcc
+CFLAGS = -Wall -Wextra -g
 
-# Flags
-CFLAGS = -Wall -g
+# Directories
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
 
-# Source and target
-SRC = src/ls-v1.0.0.c
-OBJ = obj/ls-v1.0.0.o
-TARGET = bin/ls
+# Source and object files
+SRC = $(SRC_DIR)/ls-v1.0.0.c
+OBJ = $(OBJ_DIR)/ls-v1.0.0.o
 
-# Build target
-all: $(TARGET)
+# Target executable
+TARGET = $(BIN_DIR)/ls
 
-# Compile
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
+# Default target
+all: $(BIN_DIR) $(OBJ_DIR) $(TARGET)
 
-# Clean up
+# Compile source to object
+$(OBJ): $(SRC)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link object to create executable
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) $< -o $@
+
+# Create necessary directories
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# Clean build files
 clean:
-	rm -f $(TARGET) $(OBJ)
+	rm -rf $(OBJ_DIR)/*.o $(TARGET)
