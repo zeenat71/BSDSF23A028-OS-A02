@@ -1,32 +1,43 @@
-cat > REPORT.md << EOF
-### Feature 3: Column Display (Down Then Across)
+# Report – Feature 6: ls-v1.5.0 (Colorized Output)
 
-**Q1. Explain the general logic for printing items in a "down then across" columnar format. Why is a simple single loop through the list of filenames insufficient for this task?**  
+## Question 1:
+**How do ANSI escape codes work to produce color in a standard Linux terminal? Show the specific code sequence for printing text in green.**
 
-- General Logic:  
-  1. Pehle **sab filenames ek dynamically allocated array me store** karte hain.  
-  2. Maximum filename length nikalte hain aur spacing add karte hain.  
-  3. Terminal width ko use karke **number of columns** aur **rows** calculate karte hain:  
-     columns = terminal_width / (max_filename_length + spacing)  
-     rows = ceil(total_files / columns)  
-  4. Print karte waqt **row-wise iteration** karte hain:  
-     - First row: filenames[0], filenames[0 + rows], filenames[0 + 2*rows] …  
-     - Second row: filenames[1], filenames[1 + rows], filenames[1 + 2*rows] …  
-  - Is tarah se items "down then across" print hote hain.  
+ANSI escape codes are special character sequences that tell the terminal how to format or color the output.  
+They always start with the escape character `\033` (or `\x1B`), followed by `[`, then a color or style code, and finally `m`.  
 
-- Reason single loop is insufficient:  
-  - Simple loop se files sirf **row-wise ya column-wise sequentially** print hongi.  
-  - Columns align nahi honge, aur output ls ke default style jaisa nahi hoga.  
+**General format:**
 
-**Q2. What is the purpose of the ioctl system call in this context? What would be the limitations of your program if you only used a fixed-width fallback (e.g., 80 columns) instead of detecting the terminal size?**  
+When printed to the terminal, this sequence changes the color or style of text until the reset code is used.  
 
-- Purpose of ioctl:
-  - `ioctl` aur `TIOCGWINSZ` ka use **current terminal width** detect karne ke liye hota hai.  
-  - Isse program automatically **columns adjust** karta hai according to terminal size.  
+**Common examples:**
+| Color | Code | Description |
+|--------|------|-------------|
+| Red | `\033[31m` | Red text |
+| Green | `\033[32m` | Green text |
+| Yellow | `\033[33m` | Yellow text |
+| Blue | `\033[34m` | Blue text |
+| Reset | `\033[0m` | Return to normal color |
 
-- Limitation of fixed-width fallback (80 columns):  
-  - Agar terminal chhota hai → output overflow ho sakta hai aur columns align nahi honge.  
-  - Agar terminal bada hai → unnecessary empty space hogi.  
-  - User experience poor ho jayega; ls ka default behavior accurately mimic nahi hoga.  
+**Example in C:**
+```c
+printf("\033[32mThis text appears in green!\033[0m\n");
+Question 2:
 
-EOF
+To color an executable file, you need to check its permission bits. Explain which bits in the st_mode field you need to check to determine if a file is executable by the owner, group, or others.
+
+Each file in Linux has permissions stored in its st_mode field, which is part of the struct stat structure (from <sys/stat.h>).
+This field contains bits that define read, write, and execute permissions for the owner, group, and others.
+
+To check if a file is executable, we use these predefined macros:
+
+Permission	Macro	Description
+Owner Execute	S_IXUSR	Executable by file owner
+Group Execute	S_IXGRP	Executable by group
+Others Execute	S_IXOTH	Executable by others
+struct stat st;
+stat(filename, &st);
+
+if (st.st_mode & S_IXUSR || st.st_mode & S_IXGRP || st.st_mode & S_IXOTH) {
+    printf("\033[32m%s\033[0m\n", filename); // Green for executable
+}
