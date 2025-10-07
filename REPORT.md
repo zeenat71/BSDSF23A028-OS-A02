@@ -1,32 +1,21 @@
-cat > REPORT.md << EOF
-### Feature 3: Column Display (Down Then Across)
+# Feature 4: Alphabetical Sort (ls-v1.4.0) - REPORT
 
-**Q1. Explain the general logic for printing items in a "down then across" columnar format. Why is a simple single loop through the list of filenames insufficient for this task?**  
+### 1. Why is it necessary to read all directory entries into memory before you can sort them? What are the potential drawbacks of this approach for directories containing millions of files?
 
-- General Logic:  
-  1. Pehle **sab filenames ek dynamically allocated array me store** karte hain.  
-  2. Maximum filename length nikalte hain aur spacing add karte hain.  
-  3. Terminal width ko use karke **number of columns** aur **rows** calculate karte hain:  
-     columns = terminal_width / (max_filename_length + spacing)  
-     rows = ceil(total_files / columns)  
-  4. Print karte waqt **row-wise iteration** karte hain:  
-     - First row: filenames[0], filenames[0 + rows], filenames[0 + 2*rows] …  
-     - Second row: filenames[1], filenames[1 + rows], filenames[1 + 2*rows] …  
-  - Is tarah se items "down then across" print hote hain.  
+It is necessary to read all directory entries into memory because sorting requires having access to all the elements at once. Functions like `qsort()` cannot sort elements on disk one by one; they need a complete array of filenames to compare and rearrange them alphabetically.
 
-- Reason single loop is insufficient:  
-  - Simple loop se files sirf **row-wise ya column-wise sequentially** print hongi.  
-  - Columns align nahi honge, aur output ls ke default style jaisa nahi hoga.  
+**Potential drawbacks:**
+- **High memory usage:** For directories with millions of files, storing all filenames in memory can consume a large amount of RAM.
+- **Performance issues:** Allocating and managing memory for huge arrays can slow down the program.
+- **Risk of failure:** If the system runs out of memory, the program may crash or fail to sort the directory.
 
-**Q2. What is the purpose of the ioctl system call in this context? What would be the limitations of your program if you only used a fixed-width fallback (e.g., 80 columns) instead of detecting the terminal size?**  
+---
 
-- Purpose of ioctl:
-  - `ioctl` aur `TIOCGWINSZ` ka use **current terminal width** detect karne ke liye hota hai.  
-  - Isse program automatically **columns adjust** karta hai according to terminal size.  
+### 2. Explain the purpose and signature of the comparison function required by `qsort()`. How does it work, and why must it take `const void *` arguments?
 
-- Limitation of fixed-width fallback (80 columns):  
-  - Agar terminal chhota hai → output overflow ho sakta hai aur columns align nahi honge.  
-  - Agar terminal bada hai → unnecessary empty space hogi.  
-  - User experience poor ho jayega; ls ka default behavior accurately mimic nahi hoga.  
+**Purpose:**  
+The comparison function tells `qsort()` how to compare two elements in the array. For alphabetical sorting, it compares two filenames and determines their relative order.
 
-EOF
+**Signature:**
+```c
+int cmpfunc(const void *a, const void *b);
